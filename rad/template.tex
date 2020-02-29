@@ -15,6 +15,7 @@
 \usepackage{graphicx}
 \usepackage{listings}
 \usepackage{multirow}
+\usepackage{float}
 \usepackage[table,xcdraw]{xcolor}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -98,37 +99,54 @@ Alati koji se koriste u nastavku očekuju da podaci budu određenog oblika, te j
 
 \subsection{Kontrola kvaliteta}
 
-Kako bi se analiza nastavila, potrebno je ispitati kvalitet podataka. Za ovaj korak se najčešće koriste tri veličine: količina iRNK po ćeliji, broj izraženih gena po ćeliji i procenat mitohondrijske RNK po ćeliji\cite{luecken2019current}. Generalno je poželjno da ćelije imaju veliku količinu očitane iRNK i broj izraženih gena, a mali procenat mitohondrijske RNK. (Prisustvo mitohondrijske RNK obično signalizira da sa ćelijom nešto nije u redu\cite{ilicic2016classification}). Bitno je naglasiti da bi trebalo ove veličine posmatrati zajedno i da bi pojedinačno tumačenje moglo dovesti do pogrešnih zaključaka. Na primer, ćelije koje su uključene u respiratorne procese mogu imati veću koncentraciju mitohondrijske RNK, takođe je moguće da su ćelije sa veoma velikim brojem molekula iRNK veće od ostalih. Ispitivanjem ovih vrednosti i postavljanjem granica odsecanja, mogu se eliminisati umiruće ćelije (veliki procenat mitohondrijkse RNK, mali broj molekula iRNK i mali broj izraženih gena) ili duplirani uzorci (neobično veliki broj molekula iRNK). Kod uz pomoć koga su dobijeni sledeći rezultati je u skripti \emph{qc\.py}.
+Kako bi se analiza nastavila, potrebno je ispitati kvalitet podataka. Za ovaj korak se najčešće koriste tri veličine: količina iRNK po ćeliji (broj transkripata), broj izraženih gena po ćeliji i procenat mitohondrijske RNK po ćeliji\cite{luecken2019current}. Generalno je poželjno da ćelije imaju veliku količinu očitane iRNK i broj izraženih gena, a mali procenat mitohondrijske RNK. (Prisustvo mitohondrijske RNK obično signalizira da sa ćelijom nešto nije u redu\cite{ilicic2016classification}). Bitno je naglasiti da bi trebalo ove veličine posmatrati zajedno i da bi pojedinačno tumačenje moglo dovesti do pogrešnih zaključaka. Na primer, ćelije koje su uključene u respiratorne procese mogu imati veću koncentraciju mitohondrijske RNK, takođe je moguće da su ćelije sa veoma velikim brojem molekula iRNK veće od ostalih. Iz tog razloga bice predstavljena vizuelizacija podataka sa prikazom sve tri velicine. Ispitivanjem ovih vrednosti i postavljanjem granica odsecanja, mogu se eliminisati umiruće ćelije (veliki procenat mitohondrijkse RNK, mali broj molekula iRNK i mali broj izraženih gena) ili duplirani uzorci (neobično veliki broj molekula iRNK). Kod uz pomoć koga su dobijeni sledeći rezultati je u skripti \emph{qc\.py}.
 
 Violinski grafici predstavljaju kombinaciju kutijastih dijagrama i aproksimacije gustine raspodele neke promenljive. Sa obe strane središnje linije nalaze se procene gustine za vrednosti promenljive. U najdebljem delu grafika je najveća verovatnoća da će podatak uzeti vrednost sa y ose, a u najtanjem je verovatnoća najmanja.
 
-\begin{figure}[!h]
+\begin{lstlisting}[language=python]
+def exploratory_plot(adata_list, criteria):
+  for adata in adata_list:
+    sc.pl.violin(adata, criteria)
+\end{lstlisting}
+
+\begin{lstlisting}[language=python]
+exploratory_plot([adata_14, adata_15, adata_206, adata_207], 'n_counts')
+\end{lstlisting}
+
+\begin{lstlisting}[language=python]
+exploratory_plot([adata_14, adata_15, adata_206, adata_207], 'mt_frac')
+\end{lstlisting}
+
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.22\textwidth]{GSM3308814-n-counts-violin.png}} 
     \subfigure{\includegraphics[width=0.22\textwidth]{GSM3308815-n-counts-violin.png}} 
     \subfigure{\includegraphics[width=0.22\textwidth]{GSM3316206-n-counts-violin.png}}
     \subfigure{\includegraphics[width=0.22\textwidth]{GSM3316207-n-counts-violin.png}}
-    \caption{ Violinski grafici količine izmerenih molekula iRNK za (a) GSM3308814 (b) GSM3308815 (c) GSM3316206 (d) GSM3316207. Na y osi na prvoj slici predstavljen je broj očitanih molekula iRNK dok x osa služi za vizuelizaciju gustine raspodele broja molekula iRNK. Crne tačke predstavljaju prave podatke i vidi se da im je najveća koncentracija tamo gde je grafik najdeblji odnosno gde je verovatnoća najveća. }
+    \caption{ Violinski grafici količine izmerenih molekula iRNK za (a) GSM3308814 (b) GSM3308815 (c) GSM3316206 (d) GSM3316207. Na y osi na slikama predstavljen je broj očitanih molekula iRNK (broj transkripata) dok x osa služi za vizuelizaciju gustine raspodele broja molekula iRNK. Crne tačke predstavljaju prave podatke i vidi se da im je najveća koncentracija tamo gde je grafik najdeblji odnosno gde je verovatnoća najveća. Drugim rečima, za prve dve datoteke je najveća verovatnoća da će ćelije imati blizu nula transkripata, ali postoje i ćelije sa ogromnim brojem transkripata (oko 70-80.000). U GSM3316206 je i dalje veliki broj skoncentrisan oko nule, ali postoji izdvojen deo u predelu oko 5000 transkripata. U GSM3316207 najveći deo ćelija ima između 4000 i 6000 transkripata. Primećuje se da su prve dve datoteke sličnije međusobno u odnosu na druge dve. }
     \label{fig:n_counts_violin}
 \end{figure}
 
-Primećujemo da se najveći broj ćelija u prvoj grupi (GSM3308814 i GSM3308815) nalazi u opsegu od 0 do 10000 očitanih jedinica iRNK ali da očitane vrednosti idu čak i do 70000. Ne čudi što su rezultati ove dve datoteke gotovo identični jer je GSM3308815 samo kopiran i koristi se za verifikaciju samog procesa uzorkovanja (vidi kolonu 'DESCRIPTION' u datoteci sa metapodacima). U drugoj grupi je situacija drugačija: raspodela vrednosti ima malo nepravilniji oblik i manji opseg a uzorci su međusobno manje slični.
-
 Kada se posmatraju violinski grafici procenta mitohondrijske RNK, primećuju se veliki procenti u prvoj grupi (raspodela je dosta široka u predelu od oko 40\%, što je mnogo više od preporučenih 20\%-25\%\cite{sstutorial}) ali još uvek neće biti izvedeni zaključci o kvalitetu uzorka zbog potencijalnih problema koji se mogu javiti i spomenuti su ranije u tekstu. Razlika između uzoraka možda potiče od različitih stupnjeva u razvoju ćelija između dva merenja. Takođe je moguće da se razlika javlja usled samog procesa merenja. 
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.2\textwidth]{GSM3308814-mt-frac-violin.png}} 
     \subfigure{\includegraphics[width=0.2\textwidth]{GSM3308815-mt-frac-violin.png}} 
     \subfigure{\includegraphics[width=0.2\textwidth]{GSM3316206-mt-frac-violin.png}}
     \subfigure{\includegraphics[width=0.2\textwidth]{GSM3316207-mt-frac-violin.png}}
-    \caption{ Violinski grafici broja izraženih gena za (a) GSM3308814 (b) GSM3308815 (c) GSM3316206 (d) GSM3316207}
+    \caption{ Violinski grafici procenta mitohondrijske RNK: uočava se da dosta ćelija u prve dve datoteke ima visok procenat mitohondrijske RNK što se generalno smatra lošom osobinom podataka kao što je već navedeno. S druge strane, u druge dve datoteke su vrednosti mnogo bliže preporučenim. }
     \label{fig:n_counts_violin}
 \end{figure}
 
-Druga grupa uzoraka ima znatno slabije izraženu mitohondrijsku RNK koja se kreće u preporučenim okvirima (najveći deo ćelija ima manje od 20\% mitohondrijske RNK). Iako bi se samo na osnovu ovih zapažanja u vezi mtRNK moglo zaključiti da prva grupa uzoraka nema dovoljno dobar kvalitet, ovi podaci će biti korišćeni i u ostatku rada. Na slici \ref{fig:odnos} je podrobnije ispitan udeo mitohondrijske RNK u prvoj grupi kako bi se podaci dodatno modifikovali.
+Iako bi se samo na osnovu ovih zapažanja u vezi mtRNK moglo zaključiti da prva grupa uzoraka nema dovoljno dobar kvalitet, ovi podaci će biti korišćeni i u ostatku rada. Na slici \ref{fig:odnos} je podrobnije ispitan udeo mitohondrijske RNK u prvoj grupi kako bi se podaci dodatno modifikovali.
 
-\begin{figure}[!h]
+\begin{lstlisting}[language=python]
+sc.pl.scatter(adata_14, 'n_transcripts', 'n_genes', color='mt_frac')
+sc.pl.scatter(adata_15, 'n_transcripts', 'n_genes', color='mt_frac')
+\end{lstlisting}
+
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.45\textwidth]{GSM3308814-genes-counts.png}} 
     \subfigure{\includegraphics[width=0.45\textwidth]{GSM3308815-genes-counts.png}} 
@@ -138,7 +156,8 @@ Druga grupa uzoraka ima znatno slabije izraženu mitohondrijsku RNK koja se kre�
 
 Jasno se uočava oblast tačaka sa malim brojem izraženih gena i malom količinom iRNK, a velikom koncentracijom mtRNK u donjem levom uglu na oba grafika (prikazano žutom bojom). Dobra stvar je što su nepoželjne tačke u nekoj meri linearno odvojive od glavnice podataka. Da bi se donela odluka o granicama odsecanja ovih tačaka, vršena je dodatna analiza raspodele ovih tačaka (slika \ref{fig:n_counts_GSM3308814_hist_qc}):
 
-\begin{figure}[!h]
+
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.45\textwidth, height=75]{GSM3308814-counts-hist.png}}
     \subfigure{\includegraphics[width=0.45\textwidth, height=75]{GSM3308814-counts-hist-low-end.png}} 
@@ -148,11 +167,9 @@ Jasno se uočava oblast tačaka sa malim brojem izraženih gena i malom količin
     \label{fig:n_counts_GSM3308814_hist_qc}
 \end{figure}
 
-%\newpage
-
 Nakon filtriranja podataka korišćenjem pomenutih granica, broj ćelija sa velikim procentom mtRNK je smanjen (slika \ref{fig:mt_frac_GSM14_after_filtering}). 
 
-\begin{figure}[!ht]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.45\textwidth]{GSM3308814-genes-counts-filtered.png}
     \caption{ Značajno smanjen broj ćelija sa visokim udelom mtRNK }
@@ -161,7 +178,7 @@ Nakon filtriranja podataka korišćenjem pomenutih granica, broj ćelija sa veli
 
 Na slici \ref{fig:n_genes_GSM3308814_hist_qc} su prikazani historgami broja izraženih gena u ćelijama:
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.45\textwidth]{GSM3308814-genes-hist.png}}
     \subfigure{\includegraphics[width=0.45\textwidth]{GSM3308814-genes-hist-low-end.png}} 
@@ -173,38 +190,36 @@ Na slici \ref{fig:n_genes_GSM3308814_hist_qc} su prikazani historgami broja izra
 
 Posle filtriranja dobijeni su sledeći rezultati (slika \ref{fig:n_counts_after_filtering_genes}):  
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.45\textwidth]{GSM3308814-genes-counts-filtered2.png}
-    \caption{ Broj ćelija sa visokim procentom mtRNK je dodatno smanjen }
+    \caption{ Broj ćelija sa visokim procentom mtRNK je dodatno smanjen i sada predeo sa mitohondrijskom RNK nije toliko razlicit od ostatka podataka. }
     \label{fig:n_counts_after_filtering_genes}
 \end{figure}
-
-\newpage
 
 Podaci iz uzorka GSM3308815 analizirani su i obrađeni analogno.
 
 Na slici (\ref{fig:genes_counts_group_2}) za uzorke druge grupe se vidi da ne postoji neka ravan odsecanja koja bi mogla da razdvoji podatke sa velikim i malim procentima mtRNK. Takođe, najveće vrednosti za ovu vrstu RNK su oko 50\% za GSM3316206 i 35\% za GSM3316207 (vidi sliku \ref{fig:genes_counts_group_2}). Iz ovih razloga, izbačene su ćelije sa više od 20\% nakon čega se broj ćelija smanjio sa 6053 na 5513 u GSM3316206 i sa 4222 na 4120 u GSM3316207 (slika \ref{fig:genes_counts_filtered_group_2}).
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.45\textwidth]{GSM3316206-genes-counts.png}}
     \subfigure{\includegraphics[width=0.45\textwidth]{GSM3316207-genes-counts.png}} 
-    \caption{ (a) GSM3316206 (b) GSM3316207 }
+    \caption{ Udeo mitohondrijske RNK u datotekama GSM3316206 i GSM3316207. Kao sto je vec bilo uoceno na violinskom grafiku, ova grupa ima manje celija sa visokim procentom mitohondrijske RNK. Uprkos tome, primenjeno je filtriranje celija koje imaju vise od 20\% ovakve RNK i rezultati su na slici \ref{fig:genes_counts_filtered_group_2}. }
     \label{fig:genes_counts_group_2}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.45\textwidth]{GSM3316206-genes-counts-filtered.png}}
     \subfigure{\includegraphics[width=0.45\textwidth]{GSM3316207-genes-counts-filtered.png}} 
-    \caption{ (a) GSM3316206 (b) GSM3316207 }
+    \caption{ Obe datoteke sada nemaju celije koje premasuju preporucenih 20\% mtRNK i deluje da postoji pravilnost izmedju broja transkripata i izrazenih gena sto se oslikava time sto podaci prate koliko toliko pravilnu liniju. }
     \label{fig:genes_counts_filtered_group_2}
 \end{figure}
 
 \subsubsection{Normalizacija}
 
-Pošto sigurno nisu svi molekuli iRNK pokupljeni prilikom uzorkovanja, može se desiti da broj molekula varira između ćelija što može biti posledica samog uzorkovanja. Pošto se ne može pretpostaviti da je broj molekula iRNK u svim ćelijama isti, cilj je normalizacijom modifikovati vrednosti tako da dovoljno dobro procenjuju stvaran broj molekula u ćeliji. Ne procenjuje se sam broj molekula, već faktori u okviru svake ćelije koji bi trebalo da budu proporcionalni broju molekula ćelija - \textbf{faktori velilčine}. Normalizacija se vrši tako što se izmerene vrednosti dele odgovarajućim faktorima. U okviru paketa scanpy, vrši se CPM (counts per million) normalizacija: $CPM = \frac{\frac{r_i}{R}}{10^6}$, gde je $R$ broj registrovanih molekula u celom uzorku, a $r_i$ su brojevi molekula za svaki atribut, rezultati se skaliraju sa milion zarad bolje čitljivosti. Nakon toga se podaci logaritmuju. Normalizacija je bitan korak u obradi podataka\cite{luecken2019current, long2019cluster} i zato je primenjena u ovom radu.
+Pošto sigurno nisu svi molekuli iRNK pokupljeni prilikom uzorkovanja, može se desiti da broj molekula varira između ćelija što može biti posledica samog uzorkovanja. Pošto se ne može pretpostaviti da je broj molekula iRNK u svim ćelijama isti, cilj je normalizacijom modifikovati vrednosti tako da dovoljno dobro procenjuju stvaran broj molekula u ćeliji. Ne procenjuje se sam broj molekula, već faktori u okviru svake ćelije koji bi trebalo da budu proporcionalni broju molekula ćelija - \textbf{faktori velilčine}. Normalizacija se vrši tako što se izmerene vrednosti dele odgovarajućim faktorima. U okviru paketa scanpy, vrši se CPM (counts per million) normalizacija: $CPM = \frac{\frac{r_i}{R}}{10^6}$, gde je $R$ broj registrovanih molekula u celom uzorku, a $r_i$ su brojevi molekula za svaki atribut, rezultati se skaliraju sa milion zarad bolje čitljivosti. Nakon toga se podaci logaritmuju. Normalizacija je bitan korak u obradi podataka\cite{luecken2019current, long2019cluster}, ali autori \cite{PBMC_ANN_classification} nisu dobili bolje rezultate koriscenjem normalizacije.
 
 \subsubsection{Vizualizacija}
 
@@ -222,7 +237,7 @@ Bitno je napomenuti nekoliko stvari u vezi tSNE i UMAP projekcija podataka. Naim
 
 Iako su ove dve tehnike dobre za prikaz visokodimenzionog prostora u manje dimenzija i dobro oslikavaju lokalnu povezanost tačaka u okviru istih klastera, treba biti svestan i navedenih zamki prilikom tumačenja grafika dobijenih ovim tehnikama. 
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.25\textwidth, height=75]{pca-14.png}}
     \subfigure{\includegraphics[width=0.25\textwidth, height=75]{pca-15.png}} 
@@ -230,7 +245,7 @@ Iako su ove dve tehnike dobre za prikaz visokodimenzionog prostora u manje dimen
     \label{fig:pca_HVG_group_1}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.25\textwidth, height=75]{pca-206.png}}
     \subfigure{\includegraphics[width=0.25\textwidth, height=75]{pca-207.png}} 
@@ -240,7 +255,7 @@ Iako su ove dve tehnike dobre za prikaz visokodimenzionog prostora u manje dimen
 
 PCA nam očigledno ne pruža dovoljno informacija za zaključivanje o pripadnosti nekom klasteru, ali nam može koristiti kao smernica za izbor broja glavnih komponenti. Na osnovu grafika pokrivenosti varijanse u odnosu na broj glavnih komponenti, biće izabran broj komponenti za konstrukciju grafa suseda (slika \ref{fig:pca_HVG_group_1}). 
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.2\textwidth]{14-variance-ratio.png}}
     \subfigure{\includegraphics[width=0.2\textwidth]{15-variance-ratio.png}} 
@@ -252,7 +267,7 @@ PCA nam očigledno ne pruža dovoljno informacija za zaključivanje o pripadnost
 
 Za UMAP i tSNE vizualizacije potrebna je konstrukcija grafa susedstva za date podatke. Grafovi su konstruisani metodom \lstinline{sc.pp.neighbors} paketa \lstinline{scanpy}. Za svaki skup podataka korisceno je po dve razlicite metrike: euklidsko i kosinusno. Broj glavnih komponenti odabran je tako da je pokriveno barem 90\% varijanse u svakom skupu (vidi sliku \ref{fig:variance_ratios}).
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.3\textwidth, height=75]{euclidean-14-tsne.png}}
     \subfigure{\includegraphics[width=0.3\textwidth, height=75]{cosine-14-tsne.png}} 
@@ -260,7 +275,7 @@ Za UMAP i tSNE vizualizacije potrebna je konstrukcija grafa susedstva za date po
     \label{fig:visualize_14_tsne}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.3\textwidth, height=75]{euclidean-14-umap.png}}
     \subfigure{\includegraphics[width=0.3\textwidth, height=75]{cosine-14-umap.png}} 
@@ -291,7 +306,7 @@ U nastavku ce biti prikazani najbolji (po koeficijentu senke) rezultati za ova d
 
 U sledecoj tabeli dati su najbolji rezultati klasterovanja u odnosu na koeficijent senke i Davies-Bouldin indeks.
 
-\begin{table}[!h]
+\begin{table}[H]
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lllllllll}
 \cline{2-9}
@@ -308,7 +323,7 @@ U sledecoj tabeli dati su najbolji rezultati klasterovanja u odnosu na koeficije
 \caption{Rezultati klasterovanja koriscenjem louvan algoritma: iz tabele se vidi da je najbolji rezultat (2 od 3 najbolje ocene) klasterovanje datoteke GSM3308815 za rezoluciju 0.15. Ovaj rezultat nije toliko ocigledan na slici\ref{fig:best_louvain} sto je i ocekivano s obzirom da su brojcane vrednosti ocena veoma bliske. Generalno se vidi da se za prvu grupu (GSM3308814 i GSM3308815) kosinusna rastojanja bolje ponasaju od euklidskih dok je za druge dve datoteke situacija suprotna. Iako postoje razlike izmedju izbora metrika rastojanja, ne deluje da su toliko znacajne.  } \label{tab:louvain-results}
 \end{table}
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.22\textwidth]{louvain-14-best.png}} 
     \subfigure{\includegraphics[width=0.22\textwidth]{louvain-leiden-15-best.png}} 
@@ -318,7 +333,7 @@ U sledecoj tabeli dati su najbolji rezultati klasterovanja u odnosu na koeficije
     \label{fig:best_louvain}
 \end{figure}
 
-\begin{table}[!h]
+\begin{table}[H]
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lllllllll}
 \cline{2-9}
@@ -335,7 +350,7 @@ U sledecoj tabeli dati su najbolji rezultati klasterovanja u odnosu na koeficije
 \caption{Rezultati klasterovanja koriscenjem leiden algoritma: iz tabele se vidi da je najbolji rezultat (2 od 3 najbolje ocene) klasterovanje datoteke GSM3308815 za rezoluciju 0.15 i euklidsko rastojanje. S druge strane, klasterovanje za datoteku GSM3308814 i kosinusno rastojanje daje bolju ocenu senke, tako da nije najjasnije koji klaster je bolji. Zanimljivo je da ovde nema pravilnosti vezanih za izbor ocene rastojanja i kvaliteta klasterovanja prvu datoteku je bolje kosinusno, za drugu euklidsko, za trecu kosinusno i za cetvrtu euklidsko. Ni sada rezultati nisu toliko uocljivi na slici \ref{fig:leiden-best} } \label{tab:leiden-results}
 \end{table}
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.22\textwidth]{leiden-14-best.png}} 
     \subfigure{\includegraphics[width=0.22\textwidth]{leiden-15-best.png}} 
@@ -352,7 +367,7 @@ Rezolucije klasterovanja je izabrane su eksperimentalno. Zbog nepoznatih stvarni
 Ideja algoritma je da pokuša da rasporedi podatke u k klastera tako da rastojanje među podacima u okviru jednog klastera bude minimalno. Od korisnika očekuje da unese željeni broj klastera. Rad algoritma je testiran na intervalu od 2 do 10 klastera. Dobro se skalira i na više dimenzije. Funkcija koja se minimizuje definisana je kao $$\sum_{i=0}^{n}\min_{\mu_j \in C}(||x_i - \mu_j||^2)$$
 Gde je $\mu_i$ srednja vrednost podataka u klasteru $i$ a $x_i$ su sami podaci. Zbog formulacije ove formule, KMeans algoritam ne radi dobro za izdužene ili podatke nepravilnog oblika. Vizuelizacija najboljih rezultata (po koeficijentu senke) na slici \ref{fig:best_kmeans}.
 
-\begin{table}[h!]
+\begin{table}[H]
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline
@@ -368,7 +383,7 @@ k & \cellcolor[HTML]{34FF34}4 & 2 & 2 & 2 & 2 & 2 & 3 & 3 \\ \hline
 \label{tab:kmeans-results}
 \end{table}
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.22\textwidth]{kmeans-14-best.png}} 
     \subfigure{\includegraphics[width=0.22\textwidth]{kmeans-15-best.png}} 
@@ -383,7 +398,7 @@ k & \cellcolor[HTML]{34FF34}4 & 2 & 2 & 2 & 2 & 2 & 3 & 3 \\ \hline
 
 Ovde će biti prikazani rezultati hijerarhijskog klasterovanja korišćenjem ward-ove veze. Opšta ideja algoritama hijerarhijskog klasterovanja je da svaki podatak u početku predstavlja jedan klaster. Iteraciju po iteraciju, klasteri se na osnovu sličnosti spajaju u veće klastere sve dok svi podaci ne upadnu u isti klaster. U okviru modula scikit-learn programskog jezika python postoji metod za ovu vrstu klasterovanja u kojoj je moguće postaviti traženi broj klastera. Kako bi se lakše poredili različiti algoritmi, i ovde je izabran interval od 2 do 10 klastera. Wardova veza minimizuje sumu kvadriranih razlika između svih klastera i zbog toga što se na taj način minimizuje varijansa, slična je KMeans algoritmu. Vizuelizacija rezultata je na slici \ref{fig:best_ward}.
 
-\begin{table}[h!]
+\begin{table}[H]
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{ccccccccc}
 \cline{2-9}
@@ -399,11 +414,23 @@ Ovde će biti prikazani rezultati hijerarhijskog klasterovanja korišćenjem war
 \label{tab:birch-results}
 \end{table}
 
+\begin{figure}[H]
+    \centering
+    \subfigure{\includegraphics[width=0.22\textwidth]{ward-14-best.png}} 
+    \subfigure{\includegraphics[width=0.22\textwidth]{ward-15-best.png}} 
+    \subfigure{\includegraphics[width=0.22\textwidth]{ward-206-best.png}}
+    \subfigure{\includegraphics[width=0.22\textwidth]{ward-207-best.png}}
+    \caption{ Vizuelizacija rezultata klasterovanja koriscenjem hijerarhijskog klasterovanja i ward-ove veze }
+    \label{fig:best_ward}
+\end{figure}
+
+\newpage
+
 \subsubsection{Birch klasterovanje}
 
 Ovaj algoritam klasterovanja od podataka pravi drvo odlika klasterovanja (eng. Clustering Feature Tree) koje zapravo predstavlja vid kompresije podataka sa gubitkom. Čvorovi ovog drveta sadrže podklastere koji mogu imati podklastere itd. Ovi podklasteri u sebi sadrže potrebne podatke za klasterovanje i na taj način eliminišu potrebu za čuvanje celog skupa podataka u memoriji. Parametri ovog algoritma su granica (eng. threshold) i faktor grananja. Granica određuje dovoljnu udaljenost nesvrstanog podatka do postojećeg klastera, a faktor grananja ograničava broj podklastera u drvetu. U metodi iz scikit-learn modula moguće je podesiti i broj klastera. Kao vrednosti u ovom radu uzeta je kombinacija granica 0.3,0.5, faktora grananja 50 i broja klastera 5 i 10. Vizuelizacija rezultata je na slici \ref{fig:best_birch}.
 
-\begin{table}[]
+\begin{table}[H]
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{ccccccccc}
 \cline{2-9}
@@ -417,17 +444,17 @@ Ovaj algoritam klasterovanja od podataka pravi drvo odlika klasterovanja (eng. C
 \multicolumn{1}{|c|}{Clusters} & \cellcolor[HTML]{9AFF99}10 & 10 & 10 & 10 & 5 & 5 & \cellcolor[HTML]{9AFF99}5 & 5 \\ \cline{1-1}
 \end{tabular}%
 }
-\caption{ Rezultati birch algoritma klasterovanja: rezultati nisu jednoglasni i postoje razlike medju ocenama. Naime, najbolji koeficijent senke ima klasterovanje datoteke GSM3316207 }
+\caption{ Rezultati birch algoritma klasterovanja: rezultati nisu jednoglasni i postoje razlike medju ocenama. Naime, najbolji koeficijent senke ima klasterovanje datoteke GSM3316207 koriscenjem euklidskog rastojanja, ali klasterovanje datoteke GSM3308814 ima bolji Calinski-Harabasz indeks i Davies-Bouldin indeks i Za Davies-Bouldin indeks postoji bolje klasterovanje, smatrace se da je ovo klasterovanje najbolje. }
 \label{tab:birch-results}
 \end{table}
 
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \subfigure{\includegraphics[width=0.22\textwidth]{birch-14-best.png}} 
     \subfigure{\includegraphics[width=0.22\textwidth]{birch-15-best.png}} 
     \subfigure{\includegraphics[width=0.22\textwidth]{birch-206-best.png}}
     \subfigure{\includegraphics[width=0.22\textwidth]{birch-207-best.png}}
-    \caption{ Vizuelizacija rezultata dobijenih birhc algoritmom klasterovanja: }
+    \caption{ Vizuelizacija rezultata dobijenih birhc algoritmom klasterovanja: Vizuelno, rezultati izgledaju prilicno lose i gori su od prethodnih algoritama jer postoji dosta preklapanja izmedju klastera na svim slikama, pa cak i na (a) koja karakterise najbolje klasterovanje. Ovaj algoritam se nije uspeo izboriti sa istim problemom koji je imao i K-sredina i jasno se vidi da su podaci skoro linearno razdvojeni. Preklapanje klastera na slikama moze biti rezultat toga sto je vizualizacija zapravo projekcija na samo dve dimenzije i postoji mogucnost da bi u 3D rezultati izgledali bolje. }
     \label{fig:best_birch}
 \end{figure}
 
